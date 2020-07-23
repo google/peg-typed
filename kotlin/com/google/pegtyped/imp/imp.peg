@@ -1,0 +1,98 @@
+package imp;
+start Program;
+
+Program = {
+  stmts: *Stmt;
+};
+
+Block : Program = direct TokenLCurly #Program TokenRCurly;
+
+Stmt
+  | Print {
+      drop TokenPrint;
+      e: Expr;
+      drop TokenSemi;
+    }
+  | If {
+      drop TokenIf;
+      drop TokenLBrace;
+      cond: Cond;
+      drop TokenRBrace;
+      block: Block;
+    }
+  | While {
+      drop TokenWhile;
+      drop TokenLBrace;
+      cond: Cond;
+      drop TokenRBrace;
+      block: Block;
+    }
+  | Assign {
+      dest: ID;
+      drop TokenAssign;
+      expr: Expr;
+      drop TokenSemi;
+    }
+  ;
+
+Cond = {
+  lhs: Expr;
+  op: (TokenEq / TokenNeq);
+  rhs: Expr;
+};
+
+Expr = direct WS #Sum;
+
+Sum : Expr = {
+  first : Prod;
+  rest : *SumCont;
+};
+
+SumCont = {
+  op: (TokenPlus / TokenMinus);
+  expr: Prod;
+};
+
+Prod : Expr = {
+  first : Factor;
+  rest : *ProdCont;
+};
+
+ProdCont = {
+  op: (TokenTimes / TokenDivide);
+  expr: Factor;
+};
+  
+Factor : Expr
+  | direct
+      TokenLBrace
+      #Expr
+      TokenRBrace
+  | Literal {
+      literal : TokenNatural;
+    }
+  | Reference {
+      target : ID;
+    }
+  ;
+
+WSChar := " " / "\n";
+WS := ^*WSChar;
+
+ID := #^+([a-z] / [A-Z]) WS;
+TokenPlus := #"+" WS;
+TokenMinus := #"-" WS;
+TokenTimes := #"*" WS;
+TokenDivide := #"/" WS;
+TokenLBrace := #"(" WS;
+TokenRBrace := #")" WS;
+TokenNatural := #^+[0-9] WS;
+TokenLCurly := #"{" WS;
+TokenRCurly := #"}" WS;
+TokenIf := #"if" WS;
+TokenWhile := #"while" WS;
+TokenPrint := #"print" WS;
+TokenSemi := #";" WS;
+TokenAssign := #":=" WS;
+TokenEq := #"=" WS;
+TokenNeq := #"!=" WS;
