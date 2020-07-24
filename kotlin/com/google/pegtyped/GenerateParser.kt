@@ -14,7 +14,7 @@
 
 package com.google.pegtyped
 
-import com.google.pegtyped.generated.ParseError
+import com.google.pegtyped.runtime.ParseError
 import java.io.File
 
 fun main(args: Array<String>) {

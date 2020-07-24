@@ -7,6 +7,9 @@ kt_jvm_library(
     srcs = [
         ":grammar_parser",
     ],
+    deps = [
+        "//kotlin/com/google/pegtyped/runtime",
+    ],
 )
 
 genrule(

@@ -17,4 +17,7 @@ def peg_parser(name, grammar_source):
         srcs = [
             source_rule,
         ],
+        deps = [
+            "//kotlin/com/google/pegtyped/runtime",
+        ],
     )

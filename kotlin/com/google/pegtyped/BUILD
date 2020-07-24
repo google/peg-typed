@@ -22,6 +22,7 @@ kt_jvm_library(
     deps = [
         ":peg_typed",
         "//kotlin/com/google/pegtyped/generated",
+        "//kotlin/com/google/pegtyped/runtime",
     ],
 )
 
@@ -49,6 +50,7 @@ kt_jvm_library(
     deps = [
         ":peg_typed",
         ":surface_syntax",
+        "//kotlin/com/google/pegtyped/runtime",
     ],
 )
 

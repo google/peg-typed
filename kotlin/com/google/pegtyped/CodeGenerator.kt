@@ -22,18 +22,7 @@ val prePackageHeader = """
 """.trimIndent()
 
 val postPackageHeader = """
-    class ParseError(var pos: Int): RuntimeException() {
-        fun ingest(other: ParseError): ParseError {
-            if (other.pos > pos) {
-                return other
-            }
-            return this
-        }
-        
-        override fun toString(): String {
-            return "at pos=" + pos + ": " + message
-        }
-    }
+    import com.google.pegtyped.runtime.ParseError
     sealed class Option<out T>
     data class Some<T>(val value: T): Option<T>()
     object None: Option<Nothing>()
