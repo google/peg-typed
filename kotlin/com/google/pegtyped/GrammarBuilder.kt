@@ -27,7 +27,7 @@ class GrammarBuilder(val wsToken: String? = null) {
     }
 
     fun Reference.variants(type: Type, fn: VariantsBuilder.() -> Unit): Reference {
-        val builder = VariantsBuilder()
+        val builder = VariantsBuilder(this@GrammarBuilder)
         fn(builder)
         val result = Rule(target, type, builder.variants)
         rules.add(result)
@@ -43,7 +43,7 @@ class GrammarBuilder(val wsToken: String? = null) {
     }
 
     fun Reference.single(type: Type, fn: ItemsBuilder.() -> Unit): Reference {
-        val builder = ItemsBuilder()
+        val builder = ItemsBuilder(this@GrammarBuilder)
         fn(builder)
         val result = Rule(target, type, listOf(Constructing(target, builder.items)))
         rules.add(result)
@@ -59,20 +59,20 @@ class GrammarBuilder(val wsToken: String? = null) {
     }
 
     fun Reference.alias(type: Type, fn: SequenceBuilder.() -> Unit): Reference {
-        val builder = SequenceBuilder()
+        val builder = SequenceBuilder(parentBuilder = this@GrammarBuilder)
         fn(builder)
         val result = Rule(target, type, listOf(NonConstructing(builder.build())))
         rules.add(result)
         return this
     }
 
-    fun token(name: String, token: String): Reference {
-        return token(name) {
+    fun createToken(name: String, token: String): Reference {
+        return createToken(name) {
             keep(Literal(token))
         }
     }
 
-    fun token(literal: String): Reference {
+    fun createToken(literal: String): Reference {
         val ruleName = unnamedTokens[literal]
         return when (ruleName) {
             null -> {
@@ -80,17 +80,29 @@ class GrammarBuilder(val wsToken: String? = null) {
                     "Token${unnamedTokens.size}"
                 }
 
-                return token(tokenName, literal)
+                return createToken(tokenName, literal)
             }
             else -> Reference(ruleName)
         }
     }
 
-    fun token(name: String, fn: SequenceBuilder.() -> Unit): Reference {
+    fun repeat(minTimes: Int = 0, fn: SequenceBuilder.() -> Unit): Repeat {
+        val builder = SequenceBuilder(parentBuilder = this)
+        fn(builder)
+        return Repeat(minTimes, builder.build())
+    }
+
+    fun option(fn: SequenceBuilder.() -> Unit): Optional {
+        val builder = SequenceBuilder(parentBuilder = this)
+        fn(builder)
+        return Optional(builder.build())
+    }
+
+    fun createToken(name: String, fn: SequenceBuilder.() -> Unit): Reference {
         if (wsToken == null) {
             runtimeException("should provide whitespace rule name to use token function")
         }
-        val builder = SequenceBuilder()
+        val builder = SequenceBuilder(parentBuilder = null)
         fn(builder)
         builder.drop(Reference(wsToken))
         rules.add(Rule(name, Slice, listOf(NonConstructing(builder.build()))))
@@ -104,27 +116,27 @@ fun grammar(startToken: String, wsToken: String? = null, packageName: String? = 
     return Grammar(startToken, builder.rules, packageName)
 }
 
-class VariantsBuilder {
+class VariantsBuilder(val parentBuilder: GrammarBuilder) {
     val variants = mutableListOf<Variant>()
 
     operator fun String.invoke(fn: ItemsBuilder.() -> Unit) {
-        val builder = ItemsBuilder()
+        val builder = ItemsBuilder(parentBuilder)
         fn(builder)
         variants.add(Constructing(this, builder.items))
     }
 
     fun direct(fn: SequenceBuilder.() -> Unit) {
-        val builder = SequenceBuilder()
+        val builder = SequenceBuilder(parentBuilder = parentBuilder)
         fn(builder)
         variants.add(NonConstructing(builder.build()))
     }
 }
 
-class ItemsBuilder {
+class ItemsBuilder(val parentBuilder: GrammarBuilder) {
     val items = mutableListOf<Item>()
 
     operator fun String.invoke(fn: SequenceBuilder.() -> Unit) {
-        val builder = SequenceBuilder()
+        val builder = SequenceBuilder(parentBuilder = parentBuilder)
         fn(builder)
         items.add(KeepItem(this, builder.build()))
     }
@@ -138,7 +150,7 @@ class ItemsBuilder {
     }
 
     fun drop(fn: SequenceBuilder.() -> Unit) {
-        val builder = SequenceBuilder()
+        val builder = SequenceBuilder(parentBuilder = parentBuilder)
         fn(builder)
         items.add(DropItem(builder.build()))
     }
@@ -150,6 +162,10 @@ class ItemsBuilder {
     fun drop(expr: Expr) {
         items.add(DropItem(expr))
     }
+
+    fun token(string: String) {
+        drop(parentBuilder.createToken(string))
+    }
 }
 
 data class SequenceItem(
@@ -157,19 +173,7 @@ data class SequenceItem(
         val expr: Expr
 )
 
-fun repeat(minTimes: Int = 0, fn: SequenceBuilder.() -> Unit): Repeat {
-    val builder = SequenceBuilder()
-    fn(builder)
-    return Repeat(minTimes, builder.build())
-}
-
-fun option(fn: SequenceBuilder.() -> Unit): Optional {
-    val builder = SequenceBuilder()
-    fn(builder)
-    return Optional(builder.build())
-}
-
-class SequenceBuilder(val implicitKeep: Boolean = false) {
+class SequenceBuilder(val implicitKeep: Boolean = false, val parentBuilder: GrammarBuilder? = null) {
     val items = mutableListOf<SequenceItem>()
 
     fun build(): Expr {
@@ -213,5 +217,13 @@ class SequenceBuilder(val implicitKeep: Boolean = false) {
 
     fun drop(string: String) {
         drop(Literal(string))
+    }
+
+    fun token(string: String) {
+        if (parentBuilder == null) {
+            throw RuntimeException("parentBuilder must be present to use 'token' function")
+        }
+
+        drop(parentBuilder.createToken(string))
     }
 }

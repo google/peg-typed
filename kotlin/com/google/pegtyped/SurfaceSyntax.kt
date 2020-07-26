@@ -18,7 +18,7 @@ val grammarGrammar = grammar("Grammar", "WS", "com.google.pegtyped.generated") {
     val grammar = Reference("Grammar")
     val ws = Reference("WS")
     val wsChar = Reference("WSChar")
-    val id = token("ID") {
+    val id = createToken("ID") {
         keep(AsString(Repeat(1, Choice(listOf(
                 CharRange('a', 'z'),
                 CharRange('A', 'Z'))))))
@@ -33,39 +33,39 @@ val grammarGrammar = grammar("Grammar", "WS", "com.google.pegtyped.generated") {
     val ruleExpansion = Reference("RuleExpansion")
 
     grammar.single {
-        drop(token("package"))
+        token("package")
         "packageName" to id
-        drop(token(";"))
-        drop(token("start"))
+        token(";")
+        token("start")
         "startName" to id
-        drop(token(";"))
+        token(";")
         "rules" to Repeat(rule)
     }
 
     rule.single {
         "name" to id
         "type" to option {
-            drop(token(":"))
+            token(":")
             keep(id)
         }
         "expansion" to ruleExpansion
-        drop(token(";"))
+        token(";")
     }
 
     ruleExpansion.variants {
         "SingleConstructing" {
-            drop(token("="))
-            drop(token("{"))
+            token("=")
+            token("{")
             "fields" to Repeat(field)
-            drop(token("}"))
+            token("}")
         }
         "SingleNonConstructing" {
-            drop(token("="))
-            drop(token("direct"))
+            token("=")
+            token("direct")
             "expr" to expr
         }
         "SingleSlice" {
-            drop(token(":="))
+            token(":=")
             "expr" to expr
         }
         "Multiple" {
@@ -75,30 +75,30 @@ val grammarGrammar = grammar("Grammar", "WS", "com.google.pegtyped.generated") {
 
     variant.variants {
         "NonConstructing" {
-            drop(token("|"))
-            drop(token("direct"))
+            token("|")
+            token("direct")
             "expr" to expr
         }
         "Constructing" {
-            drop(token("|"))
+            token("|")
             "name" to id
-            drop(token("{"))
+            token("{")
             "fields" to Repeat(field)
-            drop(token("}"))
+            token("}")
         }
     }
 
     field.variants {
         "DropItem" {
-            drop(token("drop"))
+            token("drop")
             "expr" to expr
-            drop(token(";"))
+            token(";")
         }
         "KeepItem" {
             "name" to id
-            drop(token(":"))
+            token(":")
             "expr" to expr
-            drop(token(";"))
+            token(";")
         }
     }
 
@@ -106,7 +106,7 @@ val grammarGrammar = grammar("Grammar", "WS", "com.google.pegtyped.generated") {
         "Choices" {
             "first" to sequence
             "rest" to repeat {
-                drop(token("/"))
+                token("/")
                 keep(sequence)
             }
         }
@@ -118,7 +118,7 @@ val grammarGrammar = grammar("Grammar", "WS", "com.google.pegtyped.generated") {
 
     sequenceItem.variants {
         "Keep" {
-            drop(token("#"))
+            token("#")
             "inner" to realSequenceItem
         }
         "Drop" {
@@ -133,42 +133,42 @@ val grammarGrammar = grammar("Grammar", "WS", "com.google.pegtyped.generated") {
                 drop(Negate(Literal("\"")))
                 keep(AnyChar)
             })
-            drop(token("\""))
+            token("\"")
         }
         "Negate" {
-            drop(token("!"))
+            token("!")
             "inner" to realSequenceItem
         }
         direct {
-            drop(token("("))
+            token("(")
             keep(expr)
-            drop(token(")"))
+            token(")")
         }
         "Repeat" {
-            drop(token("*"))
+            token("*")
             "inner" to realSequenceItem
         }
         "Repeat1" {
-            drop(token("+"))
+            token("+")
             "inner" to realSequenceItem
         }
         "CharRange" {
-            drop(token("["))
+            token("[")
             "from" to AnyChar
-            drop(token("-"))
+            token("-")
             "to" to AnyChar
-            drop(token("]"))
+            token("]")
         }
         "AnyChar" {
             // TODO: Implement support for object cases to avoid this dummy token
-            "dummy" to token(".")
+            "dummy" to createToken(".")
         }
         "Optional" {
-            drop(token("?"))
+            token("?")
             "inner" to realSequenceItem
         }
         "ToString" {
-            drop(token("^"))
+            token("^")
             "inner" to realSequenceItem
         }
         "Reference" {
