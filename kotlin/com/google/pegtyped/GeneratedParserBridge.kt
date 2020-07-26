@@ -14,6 +14,9 @@
 
 package com.google.pegtyped
 
+import com.google.pegtyped.runtime.None
+import com.google.pegtyped.runtime.Some
+
 fun convertGrammar(grammar: com.google.pegtyped.generated.Grammar): Grammar {
     return Grammar(grammar.startName, grammar.rules.map { convertRule(it) }, grammar.packageName)
 }
@@ -21,14 +24,14 @@ fun convertGrammar(grammar: com.google.pegtyped.generated.Grammar): Grammar {
 fun convertRule(rule: com.google.pegtyped.generated.Rule): Rule {
     val originalType = rule.type
     val type = when (originalType) {
-        is com.google.pegtyped.generated.Some -> {
+        is Some -> {
             if (originalType.value == "slice") {
                 Slice
             } else {
                 Defined(originalType.value)
             }
         }
-        is com.google.pegtyped.generated.None -> {
+        is None -> {
             if (rule.expansion is com.google.pegtyped.generated.SingleSlice) {
                 Slice
             } else {

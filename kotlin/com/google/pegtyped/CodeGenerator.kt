@@ -23,9 +23,9 @@ val prePackageHeader = """
 
 val postPackageHeader = """
     import com.google.pegtyped.runtime.ParseError
-    sealed class Option<out T>
-    data class Some<T>(val value: T): Option<T>()
-    object None: Option<Nothing>()
+    import com.google.pegtyped.runtime.Option
+    import com.google.pegtyped.runtime.Some
+    import com.google.pegtyped.runtime.None
 
 """.trimIndent()
 
