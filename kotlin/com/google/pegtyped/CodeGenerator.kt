@@ -26,6 +26,7 @@ val postPackageHeader = """
     import com.google.pegtyped.runtime.Option
     import com.google.pegtyped.runtime.Some
     import com.google.pegtyped.runtime.None
+    import com.google.pegtyped.runtime.LocationInfo
 
 """.trimIndent()
 
@@ -141,10 +142,10 @@ class CodeGenerator(val indentWidth: Int, val grammar: Grammar) {
         return when (expr) {
             is Literal -> {
                 val result = fresh()
-                writeLine("val $result: String")
+                writeLine("val $result: LocationInfo")
                 val str = escape(expr.s)
                 withIndent("if (source.startsWith($str, pos)) {") {
-                    writeLine("$result = $str")
+                    writeLine("$result = LocationInfo(source, pos, pos + $str.length)")
                     writeLine("pos += $str.length")
                 }
                 withIndent("else {") {
@@ -154,12 +155,12 @@ class CodeGenerator(val indentWidth: Int, val grammar: Grammar) {
             }
             is CharRange -> {
                 val result = fresh()
-                writeLine("val $result: String")
+                writeLine("val $result: LocationInfo")
                 withIndent("if (pos >= source.length) {") {
                     writeLine("error(pos)")
                 }
                 withIndent("if (source[pos] >= '${expr.from}' && source[pos] <= '${expr.to}') {") {
-                    writeLine("$result = source.substring(pos, pos + 1)")
+                    writeLine("$result = LocationInfo(source, pos, pos + 1)")
                     writeLine("pos++")
                 }
                 withIndent("else {") {
@@ -203,7 +204,7 @@ class CodeGenerator(val indentWidth: Int, val grammar: Grammar) {
                 writeLine("val startPos = pos")
                 generateExpr(expr.inner)
                 val result = fresh()
-                writeLine("val $result = source.substring(startPos, pos)")
+                writeLine("val $result = LocationInfo(source, startPos, pos)")
                 result
             }
             AnyChar -> {
@@ -211,7 +212,7 @@ class CodeGenerator(val indentWidth: Int, val grammar: Grammar) {
                 withIndent("if (pos >= source.length) {") {
                     writeLine("error(pos)")
                 }
-                writeLine("val $result = source.substring(pos, pos + 1)")
+                writeLine("val $result = LocationInfo(source, pos, pos + 1)")
                 writeLine("pos++")
                 result
             }
@@ -361,16 +362,16 @@ class CodeGenerator(val indentWidth: Int, val grammar: Grammar) {
 
     fun inferType(expr: Expr): String {
         return when (expr) {
-            is Literal -> "String"
-            is CharRange -> "String"
+            is Literal -> "LocationInfo"
+            is CharRange -> "LocationInfo"
             is Reference -> {
                 val rule = grammar.ruleByName[expr.target] ?: throw RuntimeException("unknown rule ${expr.target}")
                 rule.type.kotlinName()
             }
             is Repeat -> "List<${inferType(expr.item)}>"
             is Sequence -> inferType(expr.children[expr.keepIndex])
-            is AsString -> "String"
-            AnyChar -> "String"
+            is AsString -> "LocationInfo"
+            AnyChar -> "LocationInfo"
             is Negate -> "Any"
             is Choice -> {
                 if (expr.options.isEmpty()) {

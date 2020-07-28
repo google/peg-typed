@@ -18,28 +18,28 @@ import com.google.pegtyped.runtime.None
 import com.google.pegtyped.runtime.Some
 
 fun convertGrammar(grammar: com.google.pegtyped.generated.Grammar): Grammar {
-    return Grammar(grammar.startName, grammar.rules.map { convertRule(it) }, grammar.packageName)
+    return Grammar(grammar.startName.toString(), grammar.rules.map { convertRule(it) }, grammar.packageName.toString())
 }
 
 fun convertRule(rule: com.google.pegtyped.generated.Rule): Rule {
     val originalType = rule.type
     val type = when (originalType) {
         is Some -> {
-            if (originalType.value == "slice") {
+            if (originalType.value.toString() == "slice") {
                 Slice
             } else {
-                Defined(originalType.value)
+                Defined(originalType.value.toString())
             }
         }
         is None -> {
             if (rule.expansion is com.google.pegtyped.generated.SingleSlice) {
                 Slice
             } else {
-                Defined(rule.name)
+                Defined(rule.name.toString())
             }
         }
     }
-    return Rule(rule.name, type, convertExpansion(rule.name, type, rule.expansion))
+    return Rule(rule.name.toString(), type, convertExpansion(rule.name.toString(), type, rule.expansion))
 }
 
 fun convertExpansion(name: String, type: Type, expansion: com.google.pegtyped.generated.RuleExpansion): List<Variant> {
@@ -62,7 +62,7 @@ fun convertVariant(variant: com.google.pegtyped.generated.Variant): Variant {
             NonConstructing(convertExpr(variant.expr))
         }
         is com.google.pegtyped.generated.Constructing -> {
-            Constructing(variant.name, variant.fields.map { convertField(it) })
+            Constructing(variant.name.toString(), variant.fields.map { convertField(it) })
         }
     }
 }
@@ -70,7 +70,7 @@ fun convertVariant(variant: com.google.pegtyped.generated.Variant): Variant {
 fun convertField(field: com.google.pegtyped.generated.Field): Item {
     return when (field) {
         is com.google.pegtyped.generated.DropItem -> DropItem(convertExpr(field.expr))
-        is com.google.pegtyped.generated.KeepItem -> KeepItem(field.name, convertExpr(field.expr))
+        is com.google.pegtyped.generated.KeepItem -> KeepItem(field.name.toString(), convertExpr(field.expr))
     }
 }
 
@@ -99,18 +99,19 @@ fun convertExpr(expr: com.google.pegtyped.generated.Expr): Expr {
 
             builder.build()
         }
-        is com.google.pegtyped.generated.Literal -> Literal(expr.chars) // TODO: this would probably require some unescaping
+        is com.google.pegtyped.generated.Literal -> Literal(expr.chars.toString()) // TODO: this would probably require some unescaping
         is com.google.pegtyped.generated.Negate -> Negate(convertExpr(expr.inner))
         is com.google.pegtyped.generated.Repeat -> Repeat(convertExpr(expr.inner))
         is com.google.pegtyped.generated.Repeat1 -> Repeat(1, convertExpr(expr.inner))
         is com.google.pegtyped.generated.CharRange -> {
-            if (expr.from.length != 1 || expr.to.length != 1) {
+            // TODO: Clean up unnecessary .toString() conversions
+            if (expr.from.toString().length != 1 || expr.to.toString().length != 1) {
                 throw RuntimeException("internal error: invalid CharRange")
             }
-            CharRange(expr.from[0], expr.to[0])
+            CharRange(expr.from.toString()[0], expr.to.toString()[0])
         }
         is com.google.pegtyped.generated.AnyChar -> AnyChar
-        is com.google.pegtyped.generated.Reference -> Reference(expr.target)
+        is com.google.pegtyped.generated.Reference -> Reference(expr.target.toString())
         is com.google.pegtyped.generated.Optional -> Optional(convertExpr(expr.inner))
         is com.google.pegtyped.generated.ToString -> AsString(convertExpr(expr.inner))
     }

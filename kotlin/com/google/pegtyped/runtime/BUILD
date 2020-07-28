@@ -5,6 +5,7 @@ load("@io_bazel_rules_kotlin//kotlin:kotlin.bzl", "kt_jvm_binary", "kt_jvm_libra
 kt_jvm_library(
     name = "runtime",
     srcs = [
+        "LocationInfo.kt",
         "Option.kt",
         "ParseError.kt",
     ],

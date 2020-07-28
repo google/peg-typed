@@ -91,7 +91,7 @@ class Evaluator() {
                 }
             }
             is Assign -> {
-                env[e.dest] = eval(e.expr)
+                env[e.dest.toString()] = eval(e.expr)
             }
         }
     }
@@ -99,7 +99,7 @@ class Evaluator() {
     fun eval(e: Cond): Boolean {
         val lhs = eval(e.lhs)
         val rhs = eval(e.rhs)
-        return when (e.op) {
+        return when (e.op.toString()) {
             "=" -> lhs == rhs
             "!=" -> lhs != rhs
             else -> throw RuntimeException("unknown operator ${e.op}")
@@ -111,7 +111,7 @@ class Evaluator() {
             is Sum -> {
                 var result = eval(e.first)
                 for (cont in e.rest) {
-                    when (cont.op) {
+                    when (cont.op.toString()) {
                         "+" -> result += eval(cont.expr)
                         "-" -> result -= eval(cont.expr)
                         else -> throw RuntimeException("unknown operator ${cont.op}")
@@ -122,7 +122,7 @@ class Evaluator() {
             is Prod -> {
                 var result = eval(e.first)
                 for (cont in e.rest) {
-                    when (cont.op) {
+                    when (cont.op.toString()) {
                         "*" -> result *= eval(cont.expr)
                         "/" -> result /= eval(cont.expr)
                         else -> throw RuntimeException("unknown operator ${cont.op}")
@@ -130,8 +130,8 @@ class Evaluator() {
                 }
                 result
             }
-            is Literal -> e.literal.toInt()
-            is Reference -> env[e.target] ?: throw RuntimeException("unknown variable ${e.target}")
+            is Literal -> e.literal.toString().toInt()
+            is Reference -> env[e.target.toString()] ?: throw RuntimeException("unknown variable ${e.target.toString()}")
         }
     }
 }

@@ -24,7 +24,7 @@ sealed class Type {
     fun kotlinName(): String {
         return when (this) {
             is Defined -> name
-            Slice -> "String"
+            Slice -> "LocationInfo"
         }
     }
 }
