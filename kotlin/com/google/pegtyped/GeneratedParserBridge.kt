@@ -22,8 +22,7 @@ fun convertGrammar(grammar: com.google.pegtyped.generated.Grammar): Grammar {
 }
 
 fun convertRule(rule: com.google.pegtyped.generated.Rule): Rule {
-    val originalType = rule.type
-    val type = when (originalType) {
+    val type = when (val originalType = rule.type) {
         is Some -> {
             if (originalType.value.toString() == "slice") {
                 Slice
