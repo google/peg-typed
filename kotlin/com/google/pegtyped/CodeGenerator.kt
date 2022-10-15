@@ -89,11 +89,6 @@ class CodeGenerator(val indentWidth: Int, val grammar: Grammar) {
         lineStarted = false
     }
 
-    fun write(line: String) {
-        startLine()
-        builder.append(line)
-    }
-
     fun generateKotlinClasses(): String {
         val result = StringBuilder()
 

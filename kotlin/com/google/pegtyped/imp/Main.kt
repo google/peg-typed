@@ -68,7 +68,7 @@ fun simplify(e: ProdCont): ProdCont {
     return ProdCont(e.op, simplify(e.expr))
 }
 
-class Evaluator() {
+class Evaluator {
     val env = mutableMapOf<String, Int>()
 
     fun eval(e: Program) {
@@ -131,7 +131,7 @@ class Evaluator() {
                 result
             }
             is Literal -> e.literal.toString().toInt()
-            is Reference -> env[e.target.toString()] ?: throw RuntimeException("unknown variable ${e.target.toString()}")
+            is Reference -> env[e.target.toString()] ?: throw RuntimeException("unknown variable ${e.target}")
         }
     }
 }

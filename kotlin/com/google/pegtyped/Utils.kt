@@ -18,7 +18,7 @@ fun <T, S> List<T>.indexBy(fn: (T) -> S): Map<S, List<T>> {
     val result = mutableMapOf<S, MutableList<T>>()
 
     for (item in this) {
-        result.computeIfAbsent(fn(item), { mutableListOf() }).add(item)
+        result.computeIfAbsent(fn(item)) { mutableListOf() }.add(item)
     }
 
     return result
