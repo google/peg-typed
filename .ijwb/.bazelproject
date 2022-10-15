@@ -1,0 +1,9 @@
+directories:
+  .
+
+derive_targets_from_directories: false
+additional_languages:
+  kotlin
+
+build_flags:
+  --java_runtime_version=remotejdk_11
